@@ -1,5 +1,39 @@
-body {
-    background-color: lightblue;
-    font-family: Arial;
-    text-align: center;
+/* DARK THEME (Default) */
+body.dark {
+    background:#062f2b;
+    color:white;
+}
+
+body.dark .header {
+    background:#002855;
+}
+
+body.dark .card {
+    background:#003f5c;
+}
+
+/* LIGHT THEME */
+body.light {
+    background:#f4f6f9;
+    color:#222;
+}
+
+body.light .header {
+    background:#1976d2;
+    color:white;
+}
+
+body.light .card {
+    background:white;
+    color:#222;
+}
+
+body.light table {
+    background:white;
+    color:#222;
+}
+
+body.light th {
+    background:#1976d2;
+    color:white;
 }
