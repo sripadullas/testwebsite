@@ -13,20 +13,29 @@ body{
     font-family:'Proxima Nova',sans-serif;
     background:#0b3d2e;
     color:white;
+    <body class="dark">
 }
 
 /* HEADER */
-.header{
-    padding:18px 25px;
-    background:#003366;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
+<div class="header">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <img src="https://upload.wikimedia.org/wikipedia/en/5/5c/Telangana_State_Road_Transport_Corporation_logo.png"
+             alt="TGSRTC Logo"
+             style="height:45px;">
+        <h2 id="titleText">HYD BUS CONTROL ROOM</h2>
+    </div>
 
-.header h1{
-    margin:0;
-    font-size:20px;
+    <div style="display:flex;align-items:center;gap:15px;">
+        <span id="liveClock"></span>
+
+        <button id="themeToggle">🌙</button>
+
+        <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="te">తెలుగు</option>
+        </select>
+    </div>
+</div>
 }
 
 /* KPI */
@@ -279,12 +288,47 @@ document.getElementById("languageSelect").addEventListener("change", function(){
   headers[3].innerText = translations[lang].engine;
   headers[4].innerText = translations[lang].status;
 
+    // 🌙 LIGHT / DARK MODE
+const toggleBtn = document.getElementById("themeToggle");
+
+toggleBtn.addEventListener("click", function(){
+    if(document.body.classList.contains("dark")){
+        document.body.classList.remove("dark");
+        document.body.classList.add("light");
+        toggleBtn.innerText="☀️";
+    } else {
+        document.body.classList.remove("light");
+        document.body.classList.add("dark");
+        toggleBtn.innerText="🌙";
+    }
+    // 🕒 LIVE CLOCK
+function updateClock(){
+    const now = new Date();
+
+    const options = {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    };
+
+    const datePart = now.toLocaleDateString('en-IN', options);
+    const timePart = now.toLocaleTimeString('en-IN');
+
+    document.getElementById("liveClock").innerText =
+        datePart + " | " + timePart;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+});
 });
     
 </script>
 
 </body>
 </html>
+
 
 
 
