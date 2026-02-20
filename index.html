@@ -1,11 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Website</title>
+  <title>Live Sheet Data</title>
 </head>
 <body>
-    <h1>Hyderabad Connect</h1>
-    <p>All-In-One Transportation Connection in Hyderabad!</p>
-</body>
+  <h2>Live Google Sheet Data</h2>
+  <table border="1" id="sheetTable"></table>
 
+<script>
+const sheetURL = "PASTE_YOUR_CSV_LINK_HERE";
+
+fetch(sheetURL)
+  .then(response => response.text())
+  .then(data => {
+    const rows = data.split("\n").map(row => row.split(","));
+    let table = document.getElementById("sheetTable");
+
+    rows.forEach(row => {
+      let tr = document.createElement("tr");
+      row.forEach(cell => {
+        let td = document.createElement("td");
+        td.textContent = cell;
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+  });
+</script>
+
+</body>
 </html>
