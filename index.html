@@ -154,80 +154,93 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFABE9Tm8vvxK
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFABE9Tm8vvxKX4E93wHg1U8Nq7NmbiWdkfc1mVC0zz69eJFKuQn-FE0PtHDzN4TtbGjhUPFYWbhF0/pub?gid=1059533786&single=true&output=csv";
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFABE9Tm8vvxKX4E93wHg1U8Nq7NmbiWdkfc1mVC0zz69eJFKuQn-FE0PtHDzN4TtbGjhUPFYWbhF0/pub?gid=1785828637&single=true&output=csv";
 
+];
+
+// MAP INIT
 var map = L.map('map').setView([17.3850, 78.4867], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap contributors'
+  attribution:'© OpenStreetMap contributors'
 }).addTo(map);
 
 let markers = [];
+let total = 0;
+let electric = 0;
+let depots = new Set();
 
-fetch(sheetURL)
-.then(res=>res.text())
-.then(data=>{
+const tableBody = document.querySelector("#busTable tbody");
 
-    const rows = data.split("\n").map(r=>r.split(","));
-    const tableBody = document.querySelector("#busTable tbody");
+// LOAD ALL SHEETS
+Promise.all(
+  sheetLinks.map(link =>
+    fetch(link).then(res => res.text())
+  )
+).then(allData => {
 
-    let total=0;
-    let electric=0;
-    let depots=new Set();
+  allData.forEach(data => {
 
-    rows.slice(1).forEach(row=>{
+    const rows = data.split("\n").map(r => r.split(","));
 
-        if(row.length<4) return;
+    rows.slice(1).forEach(row => {
 
-        total++;
-        if(row[3] && row[3].includes("OLECTRA")) electric++;
-        depots.add(row[2]);
+      if(row.length < 4) return;
 
-        let lat = 17.3 + Math.random()*0.2;
-        let lng = 78.4 + Math.random()*0.2;
+      total++;
 
-        let marker = L.marker([lat,lng])
+      if(row[3] && row[3].toUpperCase().includes("OLECTRA"))
+        electric++;
+
+      depots.add(row[2]);
+
+      // Temporary random location (replace with real lat/long later)
+      let lat = 17.3 + Math.random()*0.2;
+      let lng = 78.4 + Math.random()*0.2;
+
+      let marker = L.marker([lat,lng])
         .addTo(map)
         .bindPopup("<b>"+row[0]+"</b><br>"+row[2]);
 
-        markers.push({vehicle:row[0], marker:marker});
+      markers.push({vehicle:row[0], marker:marker});
 
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-            <td>${row[0]}</td>
-            <td>${row[1]}</td>
-            <td>${row[2]}</td>
-            <td>${row[3]}</td>
-            <td><span class="status">Active</span></td>
-        `;
-        tableBody.appendChild(tr);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row[0]}</td>
+        <td>${row[1]}</td>
+        <td>${row[2]}</td>
+        <td>${row[3]}</td>
+        <td><span class="status">Active</span></td>
+      `;
+
+      tableBody.appendChild(tr);
+
     });
 
-    document.getElementById("totalBuses").textContent=total;
-    document.getElementById("electricCount").textContent=electric;
-    document.getElementById("depotCount").textContent=depots.size;
+  });
+
+  document.getElementById("totalBuses").textContent = total;
+  document.getElementById("electricCount").textContent = electric;
+  document.getElementById("depotCount").textContent = depots.size;
+
 });
 
-// VEHICLE SEARCH
+// SEARCH FUNCTION
 document.getElementById("searchInput").addEventListener("keyup", function(){
 
-    let value=this.value.toLowerCase();
-    let rows=document.querySelectorAll("#busTable tbody tr");
+  let value = this.value.toLowerCase();
+  let rows = document.querySelectorAll("#busTable tbody tr");
 
-    rows.forEach(row=>{
-        row.style.display=row.innerText.toLowerCase().includes(value) ? "" : "none";
-    });
+  rows.forEach(row=>{
+    row.style.display =
+      row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
 
-    markers.forEach(obj=>{
-        if(obj.vehicle.toLowerCase().includes(value)){
-            obj.marker.openPopup();
-            map.setView(obj.marker.getLatLng(), 12);
-        }
-    });
+  markers.forEach(obj=>{
+    if(obj.vehicle.toLowerCase().includes(value)){
+      obj.marker.openPopup();
+      map.setView(obj.marker.getLatLng(), 12);
+    }
+  });
 
 });
 
 </script>
-
-</body>
-</html>
-
-
