@@ -11,18 +11,17 @@
 body{
     margin:0;
     font-family:'Poppins',sans-serif;
-    background:#0b3d2e; /* Govt Green Base */
+    background:#0b3d2e;
     color:white;
 }
 
 /* HEADER */
 .header{
     padding:18px 25px;
-    background:#003366; /* Govt Blue */
+    background:#003366;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    box-shadow:0 4px 20px rgba(0,0,0,0.4);
 }
 
 .header h1{
@@ -30,7 +29,7 @@ body{
     font-size:20px;
 }
 
-/* KPI CARDS */
+/* KPI */
 .dashboard{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -42,13 +41,24 @@ body{
     background:#004d40;
     padding:20px;
     border-radius:12px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.4);
 }
 
 .card h2{
     margin:0;
-    font-size:28px;
+    font-size:26px;
     color:#4dd0e1;
+}
+
+/* SEARCH */
+.search-box{
+    padding:0 20px 10px 20px;
+}
+
+.search-box input{
+    padding:10px;
+    width:250px;
+    border-radius:6px;
+    border:none;
 }
 
 /* MAP */
@@ -56,7 +66,6 @@ body{
     height:400px;
     margin:20px;
     border-radius:12px;
-    overflow:hidden;
 }
 
 /* TABLE */
@@ -68,14 +77,11 @@ table{
     width:100%;
     border-collapse:collapse;
     background:#002b36;
-    border-radius:10px;
-    overflow:hidden;
 }
 
 th{
     background:#003f5c;
     padding:12px;
-    text-align:left;
 }
 
 td{
@@ -88,16 +94,10 @@ tr:hover{
 }
 
 .status{
-    padding:5px 10px;
+    padding:4px 10px;
     border-radius:15px;
-    font-size:12px;
     background:#2e7d32;
-}
-
-@media(max-width:768px){
-    #map{
-        height:300px;
-    }
+    font-size:12px;
 }
 </style>
 </head>
@@ -105,7 +105,7 @@ tr:hover{
 <body>
 
 <div class="header">
-    <h1>🚍 HYD OLECTRA Bus Tracking</h1>
+    <h1>🚍 HYD OLECTRA Tracking</h1>
     <div>Live Control Dashboard</div>
 </div>
 
@@ -114,32 +114,34 @@ tr:hover{
         <h2 id="totalBuses">0</h2>
         <p>Total Buses</p>
     </div>
-
     <div class="card">
         <h2 id="electricCount">0</h2>
         <p>Electric Buses</p>
     </div>
-
     <div class="card">
         <h2 id="depotCount">0</h2>
         <p>Total Depots</p>
     </div>
 </div>
 
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search Vehicle No...">
+</div>
+
 <div id="map"></div>
 
 <div class="table-container">
 <table id="busTable">
-    <thead>
-        <tr>
-            <th>Vehicle No</th>
-            <th>Type</th>
-            <th>Depot</th>
-            <th>Engine</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
+<thead>
+<tr>
+<th>Vehicle No</th>
+<th>Type</th>
+<th>Depot</th>
+<th>Engine</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
 </table>
 </div>
 
@@ -147,15 +149,16 @@ tr:hover{
 
 <script>
 
-// 🔴 PASTE YOUR CSV LINK HERE
-const sheetURL = "PASTE_YOUR_CSV_LINK_HERE";
+// 🔴 PUT YOUR GOOGLE SHEET CSV LINK HERE
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFABE9Tm8vvxKX4E93wHg1U8Nq7NmbiWdkfc1mVC0zz69eJFKuQn-FE0PtHDzN4TtbGjhUPFYWbhF0/pub?output=csv";
 
-// Initialize Map (Hyderabad Center)
 var map = L.map('map').setView([17.3850, 78.4867], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'© OpenStreetMap contributors'
 }).addTo(map);
+
+let markers = [];
 
 fetch(sheetURL)
 .then(res=>res.text())
@@ -176,14 +179,14 @@ fetch(sheetURL)
         if(row[3] && row[3].includes("OLECTRA")) electric++;
         depots.add(row[2]);
 
-        // Add marker (you must add lat,long columns in sheet for real tracking)
-        // For now random offset near HYD
         let lat = 17.3 + Math.random()*0.2;
         let lng = 78.4 + Math.random()*0.2;
 
-        L.marker([lat,lng])
-         .addTo(map)
-         .bindPopup("<b>"+row[0]+"</b><br>"+row[2]);
+        let marker = L.marker([lat,lng])
+        .addTo(map)
+        .bindPopup("<b>"+row[0]+"</b><br>"+row[2]);
+
+        markers.push({vehicle:row[0], marker:marker});
 
         const tr=document.createElement("tr");
         tr.innerHTML=`
@@ -194,12 +197,29 @@ fetch(sheetURL)
             <td><span class="status">Active</span></td>
         `;
         tableBody.appendChild(tr);
-
     });
 
     document.getElementById("totalBuses").textContent=total;
     document.getElementById("electricCount").textContent=electric;
     document.getElementById("depotCount").textContent=depots.size;
+});
+
+// VEHICLE SEARCH
+document.getElementById("searchInput").addEventListener("keyup", function(){
+
+    let value=this.value.toLowerCase();
+    let rows=document.querySelectorAll("#busTable tbody tr");
+
+    rows.forEach(row=>{
+        row.style.display=row.innerText.toLowerCase().includes(value) ? "" : "none";
+    });
+
+    markers.forEach(obj=>{
+        if(obj.vehicle.toLowerCase().includes(value)){
+            obj.marker.openPopup();
+            map.setView(obj.marker.getLatLng(), 12);
+        }
+    });
 
 });
 
