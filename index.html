@@ -1,33 +1,224 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live Sheet Data</title>
+<title>HYD Bus Tracking Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+/* HEADER */
+.header{
+    padding:20px;
+    background:#111827;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 4px 15px rgba(0,0,0,0.5);
+}
+
+.header h1{
+    font-size:22px;
+    margin:0;
+}
+
+/* KPI CARDS */
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    background:linear-gradient(145deg,#1e293b,#0f172a);
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.4);
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+.card h2{
+    margin:0;
+    font-size:28px;
+    color:#38bdf8;
+}
+
+/* TABLE */
+.table-container{
+    padding:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#1e293b;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+th{
+    background:#334155;
+    padding:12px;
+    text-align:left;
+}
+
+td{
+    padding:10px;
+    border-bottom:1px solid #334155;
+}
+
+tr:hover{
+    background:#475569;
+}
+
+/* STATUS BADGE */
+.status{
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:12px;
+}
+
+.active{
+    background:#16a34a;
+}
+
+.inactive{
+    background:#dc2626;
+}
+
+/* SEARCH */
+.search-box{
+    padding:20px;
+}
+
+input{
+    padding:10px;
+    width:250px;
+    border-radius:8px;
+    border:none;
+}
+
+@media(max-width:768px){
+    .header{
+        flex-direction:column;
+        gap:10px;
+    }
+}
+</style>
 </head>
+
 <body>
-  <h2>Live Google Sheet Data</h2>
-  <table border="1" id="sheetTable"></table>
+
+<div class="header">
+    <h1>🚍 HYD OLECTRA Tracking Dashboard</h1>
+    <div>Live Google Sheet Data</div>
+</div>
+
+<!-- KPI SECTION -->
+<div class="dashboard">
+    <div class="card">
+        <h2 id="totalBuses">0</h2>
+        <p>Total Buses</p>
+    </div>
+
+    <div class="card">
+        <h2 id="electricCount">0</h2>
+        <p>Electric Buses</p>
+    </div>
+
+    <div class="card">
+        <h2 id="depotCount">0</h2>
+        <p>Total Depots</p>
+    </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search Vehicle / Depot...">
+</div>
+
+<!-- TABLE -->
+<div class="table-container">
+    <table id="busTable">
+        <thead>
+            <tr>
+                <th>Vehicle No</th>
+                <th>Type</th>
+                <th>Depot</th>
+                <th>Engine</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFABE9Tm8vvxKX4E93wHg1U8Nq7NmbiWdkfc1mVC0zz69eJFKuQn-FE0PtHDzN4TtbGjhUPFYWbhF0/pub?output=csv";
+
+// 🔴 REPLACE WITH YOUR CSV LINK
+const sheetURL = "PASTE_YOUR_CSV_LINK_HERE";
 
 fetch(sheetURL)
-  .then(response => response.text())
-  .then(data => {
-    const rows = data.split("\n").map(row => row.split(","));
-    let table = document.getElementById("sheetTable");
+.then(res => res.text())
+.then(data => {
+
+    const rows = data.split("\n").map(r => r.split(","));
+    const headers = rows[0];
+    const tableBody = document.querySelector("#busTable tbody");
+
+    let total = 0;
+    let electric = 0;
+    let depots = new Set();
+
+    rows.slice(1).forEach(row => {
+
+        if(row.length < 4) return;
+
+        total++;
+        if(row[3] && row[3].includes("OLECTRA")) electric++;
+        depots.add(row[2]);
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${row[0]}</td>
+            <td>${row[1]}</td>
+            <td>${row[2]}</td>
+            <td>${row[3]}</td>
+            <td><span class="status active">Active</span></td>
+        `;
+
+        tableBody.appendChild(tr);
+    });
+
+    document.getElementById("totalBuses").textContent = total;
+    document.getElementById("electricCount").textContent = electric;
+    document.getElementById("depotCount").textContent = depots.size;
+});
+
+// SEARCH FILTER
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let value = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#busTable tbody tr");
 
     rows.forEach(row => {
-      let tr = document.createElement("tr");
-      row.forEach(cell => {
-        let td = document.createElement("td");
-        td.textContent = cell;
-        tr.appendChild(td);
-      });
-      table.appendChild(tr);
+        row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
     });
-  });
+});
+
 </script>
 
 </body>
 </html>
-
