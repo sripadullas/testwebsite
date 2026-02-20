@@ -1,7 +1,6 @@
-# My First Website
+# Hyderabad Connect!
 
-This is a simple HTML, CSS, and JavaScript website hosted on GitHub Pages.
-
+All-In-One Integrated Website About Transportation in Hyderabad!
 ## How to Host
 1. Upload all files to a GitHub repository.
 2. Go to **Settings → Pages**.
